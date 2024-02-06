@@ -61,11 +61,11 @@ async function insertIssue(item, repo, page) {
 
   const block1 = await logseq.Editor.insertBlock(
     page.name,
-    `TODO ${item.pull_request ? "[[pull]]" : ""} [[${ORG_NAME}]]/[[${
-      repo.name
-    }]] ${item.title} [[@${formattedUserLogin}]] [${item.number}](${
-      item.html_url
-    })`,
+    `${item.state === "closed" ? "DONE" : "TODO"} ${
+      item.pull_request ? "[[pull]]" : ""
+    } [[${ORG_NAME}]]/[[${repo.name}]] ${
+      item.title
+    } [[@${formattedUserLogin}]] [${item.number}](${item.html_url})`,
     { isPageBlock: true }
   );
 
@@ -103,16 +103,6 @@ async function insertIssue(item, repo, page) {
     block1.uuid,
     `
       updated: ${formatDate(item.updated_at)}
-    `,
-    {
-      sibling: false,
-    }
-  );
-
-  await logseq.Editor.insertBlock(
-    block1.uuid,
-    `
-      state: ${item.state}
     `,
     {
       sibling: false,

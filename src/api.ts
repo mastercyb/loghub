@@ -6,16 +6,12 @@ export async function fetchWrapper(url: string) {
 
 export async function getOrgRepos(org: string) {
   const repos = await fetchWrapper(`https://api.github.com/orgs/${org}/repos`);
-
-  console.log(repos.length);
   return repos;
 }
 
 export async function getIssues(name: string) {
   const issues = await fetchWrapper(
-    `https://api.github.com/repos/cybercongress/${name}/issues?per_page=20`
+    `https://api.github.com/repos/cybercongress/${name}/issues`
   );
   return issues;
 }
-
-getOrgRepos("cybercongress");

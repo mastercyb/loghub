@@ -22,17 +22,24 @@ async function init() {
 
   const page = await logseq.Editor.createPage(pageName, {}, { redirect: true });
 
-  await logseq.Editor.insertBlock(
+  const mainBlock = await logseq.Editor.insertBlock(
     page.name,
-    // repo counts
     `### ${repos.length} repositories`,
     { isPageBlock: true }
   );
 
+  await logseq.Editor.insertBlock(page.name, `---`, { isPageBlock: true });
+
   for (const repo of repos) {
     const issues = await getIssues(repo.name);
 
-    for (const item of issues.slice) {
+    await logseq.Editor.insertBlock(
+      mainBlock.uuid,
+      `[[${repo.name}]] - ${issues.length} issues`,
+      { isPageBlock: true }
+    );
+
+    for (const item of issues) {
       insertIssue(item, repo, page);
     }
   }
@@ -47,7 +54,7 @@ async function insertIssue(item, repo, page) {
 
   function formatDate(date: string) {
     const d = date.split("T")[0];
-    const t = date.split("T")[1].split("Z")[0].substring(0, -3);
+    const t = date.split("T")[1].split("Z")[0].substring(0, 5);
 
     return `[[${d}]] ${t}`;
   }
@@ -146,11 +153,10 @@ async function insertIssue(item, repo, page) {
 const main = async () => {
   console.log("plugin loaded");
   logseq.onSettingsChanged(updateSettings);
-
   logseq.Editor.registerSlashCommand("GithubPlugin: init", async (e) => {
     await logseq.Editor.deletePage(pageName);
 
-    await initOrg();
+    await init();
   });
   if (logseq.settings.blockTracker == undefined) {
     logseq.updateSettings({ blockTracker: [] });

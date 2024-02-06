@@ -5,13 +5,15 @@ export async function fetchWrapper(url: string) {
 }
 
 export async function getOrgRepos(org: string) {
-  const repos = await fetchWrapper(`https://api.github.com/orgs/${org}/repos`);
+  const repos = await fetchWrapper(
+    `https://api.github.com/orgs/${org}/repos?per_page=100`
+  );
   return repos;
 }
 
 export async function getIssues(name: string) {
   const issues = await fetchWrapper(
-    `https://api.github.com/repos/cybercongress/${name}/issues`
+    `https://api.github.com/repos/cybercongress/${name}/issues?state=all`
   );
   return issues;
 }

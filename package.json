@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "parcel build --no-source-maps index.html --public-url ./",
+    "postbuild": "./scripts/postbuild.sh",
     "watch": "parcel watch index.html --public-url ./",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

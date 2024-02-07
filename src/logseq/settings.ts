@@ -7,14 +7,14 @@ const settings: SettingSchemaDesc[] = [
     type: "string",
     title: "Enter github personal access token",
     description: "Enter your personal access token here",
-    default: "user:sawhney17",
+    default: "",
   },
   {
-    key: "SearchQuery",
+    key: "OranizationName",
     type: "string",
-    title: "Enter github search query",
-    description: "Enter your desired search query here",
-    default: "user:sawhney17",
+    title: "Name of the organization",
+    description: "",
+    default: "",
   },
   {
     key: "TargetPage",
@@ -24,6 +24,13 @@ const settings: SettingSchemaDesc[] = [
       "Enter your desired page, to where the blocks will be inserted",
     default: "Github Issues",
   },
+  // {
+  //   key: "SearchQuery",
+  //   type: "string",
+  //   title: "Enter github search query",
+  //   description: "Enter your desired search query here",
+  //   default: "user:sawhney17",
+  // },
   // {
   //   key: "Block1InsertionTemplate",
   //   type: "string",

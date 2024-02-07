@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@logseq/libs": "0.0.1-alpha.35",
+    "@octokit/plugin-paginate-graphql": "^4.0.0",
     "octokit": "^1.7.1"
   },
   "devDependencies": {

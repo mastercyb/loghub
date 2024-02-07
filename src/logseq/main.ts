@@ -2,25 +2,33 @@ import "@logseq/libs";
 
 import "./settings";
 import { getIssues, getOrgRepos } from "../api";
+import { Octokit } from "octokit";
 
-var blockArray;
+// var blockArray;
 
-function updateSettings() {
-  blockArray = logseq.settings.blockTracker;
-}
+// function updateSettings() {
+//   blockArray = logseq.settings.blockTracker;
+// }
 
-function syncSettings() {
-  logseq.updateSettings({ blockTracker: blockArray });
-}
+// function syncSettings() {
+//   logseq.updateSettings({ blockTracker: blockArray });
 
-const ORG_NAME = "cybercongress";
+async function init(octokit) {
+  // get logseq settings
+  const settings = logseq.settings;
+  const orgName = settings["OranizationName"];
 
-const pageName = "GithubPlugin: CyberCongress";
+  if (!orgName) {
+    return;
+  }
 
-async function init() {
-  const repos = await getOrgRepos(ORG_NAME);
+  const repos = await getOrgRepos(octokit, orgName);
 
-  const page = await logseq.Editor.createPage(pageName, {}, { redirect: true });
+  const page = await logseq.Editor.createPage(
+    settings["TargetPage"],
+    {},
+    { redirect: true }
+  );
 
   const mainBlock = await logseq.Editor.insertBlock(
     page.name,
@@ -31,7 +39,7 @@ async function init() {
   await logseq.Editor.insertBlock(page.name, `---`, { isPageBlock: true });
 
   for (const repo of repos) {
-    const issues = await getIssues(repo.name);
+    const issues = await getIssues(octokit, orgName, repo.name);
 
     await logseq.Editor.insertBlock(
       mainBlock.uuid,
@@ -59,11 +67,13 @@ async function insertIssue(item, repo, page) {
     return `[[${d}]] ${t}`;
   }
 
+  const orgName = logseq.settings["OranizationName"];
+
   const block1 = await logseq.Editor.insertBlock(
     page.name,
     `${item.state === "closed" ? "DONE" : "TODO"} ${
       item.pull_request ? "[[pull]]" : ""
-    } [[${ORG_NAME}]]/[[${repo.name}]] ${
+    } [[${orgName}]]/[[${repo.name}]] ${
       item.title
     } [[@${formattedUserLogin}]] [${item.number}](${item.html_url})`,
     { isPageBlock: true }
@@ -71,62 +81,34 @@ async function insertIssue(item, repo, page) {
 
   await logseq.Editor.insertBlock(
     block1.uuid,
-    `
-      creator: [[@${formattedUserLogin}]]
-    `,
-    {
-      sibling: false,
-    }
+    `creator: [[@${formattedUserLogin}]]`
   );
 
   await logseq.Editor.insertBlock(
     block1.uuid,
-    `
-      assignee: ${item.assignee ? `[[@${item.assignee.login}]]` : "None"}
-    `,
-    {
-      sibling: false,
-    }
+    `assignee: ${item.assignee ? `[[@${item.assignee.login}]]` : "-"}`
   );
 
   await logseq.Editor.insertBlock(
     block1.uuid,
-    `
-      created: ${formatDate(item.created_at)}
-    `,
-    {
-      sibling: false,
-    }
+    `created: ${formatDate(item.created_at)}`
   );
 
   await logseq.Editor.insertBlock(
     block1.uuid,
-    `
-      updated: ${formatDate(item.updated_at)}
-    `,
-    {
-      sibling: false,
-    }
+    `updated: ${formatDate(item.updated_at)}`
   );
 
   await logseq.Editor.insertBlock(
     block1.uuid,
-    `
-    labels: ${item.labels.map((label) => `[[${label.name}]]`).join(", ")}
-    `,
-    {
-      sibling: false,
-    }
+    `labels: ${
+      item.labels.map((label) => `[[${label.name}]]`).join(", ") || "-"
+    }`
   );
 
   await logseq.Editor.insertBlock(
     block1.uuid,
-    `
-      milestones: ${item.milestone ? `[[${item.milestone.title}]]` : "None"}
-    `,
-    {
-      sibling: false,
-    }
+    `milestones: ${item.milestone ? `[[${item.milestone.title}]]` : "-"}`
   );
 
   //   await logseq.Editor.insertBlock(
@@ -134,24 +116,27 @@ async function insertIssue(item, repo, page) {
   //     `
   // projects: TODO
   //     `,
-  //     {
-  //       sibling: false,
-  //     }
   //   );
 }
 
 const main = async () => {
   console.log("plugin loaded");
-  logseq.onSettingsChanged(updateSettings);
-  logseq.Editor.registerSlashCommand("GithubPlugin: init", async (e) => {
-    await logseq.Editor.deletePage(pageName);
+  // logseq.onSettingsChanged(updateSettings);
 
-    await init();
+  logseq.Editor.registerSlashCommand("GithubPlugin: init", async () => {
+    await logseq.Editor.deletePage(logseq.settings["TargetPage"]);
+
+    const octokit = new Octokit({
+      auth: logseq.settings["API Key"],
+    });
+
+    await init(octokit);
   });
-  if (logseq.settings.blockTracker == undefined) {
-    logseq.updateSettings({ blockTracker: [] });
-    console.log(logseq.settings.blockTracker);
-  }
+
+  // if (logseq.settings.blockTracker == undefined) {
+  // logseq.updateSettings({ blockTracker: [] });
+  // console.log(logseq.settings.blockTracker);
+  // }
 };
 
 logseq.ready(main).catch(console.error);

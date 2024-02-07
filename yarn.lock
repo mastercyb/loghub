@@ -319,6 +319,11 @@
   resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-18.1.1.tgz#09bdfdabfd8e16d16324326da5148010d765f009"
   integrity sha512-VRaeH8nCDtF5aXWnjPuEMIYf1itK/s3JYyJcWFJT8X9pSNnBtriDf7wlEWsGuhPLl4QIH4xM8fqTXDwJ3Mu6sw==
 
+"@octokit/plugin-paginate-graphql@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@octokit/plugin-paginate-graphql/-/plugin-paginate-graphql-4.0.0.tgz#b26024fa454039c18b948f13bf754ff86b89e8b9"
+  integrity sha512-7HcYW5tP7/Z6AETAPU14gp5H5KmCPT3hmJrS/5tO7HIgbwenYmgw4OY9Ma54FDySuxMwD+wsJlxtuGWwuZuItA==
+
 "@octokit/plugin-paginate-rest@^2.13.3", "@octokit/plugin-paginate-rest@^2.18.0":
   version "2.21.3"
   resolved "https://registry.yarnpkg.com/@octokit/plugin-paginate-rest/-/plugin-paginate-rest-2.21.3.tgz#7f12532797775640dbb8224da577da7dc210c87e"

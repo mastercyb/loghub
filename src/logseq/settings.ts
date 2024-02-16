@@ -9,13 +9,13 @@ const settings: SettingSchemaDesc[] = [
     description: "Enter your personal access token here",
     default: "",
   },
-  {
-    key: "OranizationName",
-    type: "string",
-    title: "Name of the organization",
-    description: "",
-    default: "",
-  },
+  // {
+  //   key: "OranizationName",
+  //   type: "string",
+  //   title: "Name of the organization",
+  //   description: "",
+  //   default: "",
+  // },
   {
     key: "TargetPage",
     type: "string",
@@ -24,13 +24,13 @@ const settings: SettingSchemaDesc[] = [
       "Enter your desired page, to where the blocks will be inserted",
     default: "Github Issues",
   },
-  // {
-  //   key: "SearchQuery",
-  //   type: "string",
-  //   title: "Enter github search query",
-  //   description: "Enter your desired search query here",
-  //   default: "user:sawhney17",
-  // },
+  {
+    key: "SearchQuery",
+    type: "string",
+    title: "Enter github search query",
+    description: "Enter your desired search query here",
+    default: "org:cybercongress is:issue",
+  },
   // {
   //   key: "Block1InsertionTemplate",
   //   type: "string",

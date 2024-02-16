@@ -1,27 +1,83 @@
 import { Octokit } from "octokit";
+import { paginateGraphql } from "@octokit/plugin-paginate-graphql";
+import { Issue, SearchResultItemConnection } from "@octokit/graphql-schema";
 
-export async function getOrgRepos(octokit: Octokit, org: string) {
-  const repos = await octokit.request("GET /orgs/{org}/repos", {
-    org,
-    per_page: 100,
+const MyOctokit = Octokit.plugin(paginateGraphql);
+
+let octokit;
+
+export function initApi(apiKey: string) {
+  octokit = new MyOctokit({
+    auth: apiKey,
   });
-
-  return repos.data;
 }
 
-export async function getIssues(
-  octokit: Octokit,
-  repoName: string,
-  orgName: string
-) {
-  const data = await octokit.paginate({
-    method: "GET",
-    url: `/repos/${repoName}/${orgName}/issues`,
-    per_page: 100,
-    headers: {
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-  });
+export async function search(q: string) {
+  const query = `
+    query paginate($cursor: String) {
+      search(query: "${q}", type: ISSUE, first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          ... on Issue {
+            __typename
+            id
+            databaseId
+            createdAt
+            updatedAt
+            number
+            title
+            state
+            url
+            author {
+              login
+            }
+            assignees(first: 3) {
+              nodes {
+                ... on Actor {
+                  login
+                }
+              }
+            }
+    
+            labels(first: 5) {
+              nodes {
+                ... on Label {
+                  name
+                }
+              }
+            }
+    
+            repository {
+              name
+              url
+            }
+    
+            milestone {
+              title
+            }
+    
+            projectItems(first: 5) {
+              nodes {
+                id
+                project {
+                  title
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
 
-  return data;
+  const data = await octokit.graphql.paginate(query);
+
+  const issues = data.search.nodes as Issue[];
+
+  // console.log(issues.length);
+
+  return issues;
 }

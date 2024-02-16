@@ -1,8 +1,8 @@
 import "@logseq/libs";
 
 import "./settings";
-import { getIssues, getOrgRepos } from "../api";
-import { Octokit } from "octokit";
+import { initApi, search } from "../api";
+import { Issue } from "@octokit/graphql-schema";
 
 // var blockArray;
 
@@ -13,16 +13,18 @@ import { Octokit } from "octokit";
 // function syncSettings() {
 //   logseq.updateSettings({ blockTracker: blockArray });
 
-async function init(octokit) {
+async function init() {
   // get logseq settings
   const settings = logseq.settings;
-  const orgName = settings["OranizationName"];
+  const searchQuery = settings["SearchQuery"];
 
-  if (!orgName) {
+  console.log("search: ", searchQuery);
+
+  if (!searchQuery) {
     return;
   }
 
-  const repos = await getOrgRepos(octokit, orgName);
+  const data = await search(searchQuery);
 
   const page = await logseq.Editor.createPage(
     settings["TargetPage"],
@@ -30,33 +32,39 @@ async function init(octokit) {
     { redirect: true }
   );
 
-  const mainBlock = await logseq.Editor.insertBlock(
-    page.name,
-    `### ${repos.length} repositories`,
-    { isPageBlock: true }
-  );
+  data.forEach((item) => {
+    console.log(item);
 
-  await logseq.Editor.insertBlock(page.name, `---`, { isPageBlock: true });
+    insertIssue(item, page);
+  });
 
-  for (const repo of repos) {
-    const issues = await getIssues(octokit, orgName, repo.name);
+  // const mainBlock = await logseq.Editor.insertBlock(
+  //   page.name,
+  //   `### ${repos.length} repositories`,
+  //   { isPageBlock: true }
+  // );
 
-    await logseq.Editor.insertBlock(
-      mainBlock.uuid,
-      `[[${repo.name}]] - ${issues.length} issues`,
-      { isPageBlock: true }
-    );
+  // await logseq.Editor.insertBlock(page.name, `---`, { isPageBlock: true });
 
-    for (const item of issues) {
-      insertIssue(item, repo, page);
-    }
-  }
+  // for (const repo of repos) {
+  //   const issues = await getIssues(octokit, orgName, repo.name);
+
+  //   await logseq.Editor.insertBlock(
+  //     mainBlock.uuid,
+  //     `[[${repo.name}]] - ${issues.length} issues`,
+  //     { isPageBlock: true }
+  //   );
+
+  //   for (const item of issues) {
+  //     insertIssue(item, repo, page);
+  //   }
+  // }
 
   await logseq.Editor.insertBlock(page.name, "", { isPageBlock: true });
 }
 
-async function insertIssue(item, repo, page) {
-  const formattedUserLogin = item.user.login
+async function insertIssue(item: Issue, page) {
+  const formattedUserLogin = item.author.login
     .replace("[", "(")
     .replace("]", ")");
 
@@ -67,15 +75,16 @@ async function insertIssue(item, repo, page) {
     return `[[${d}]] ${t}`;
   }
 
-  const orgName = logseq.settings["OranizationName"];
+  // const orgName = logseq.settings["OranizationName"];
+  const orgName = "";
 
   const block1 = await logseq.Editor.insertBlock(
     page.name,
-    `${item.state === "closed" ? "DONE" : "TODO"} ${
+    `${item.state === "CLOSED" ? "DONE" : "TODO"} ${
       item.pull_request ? "[[pull]]" : ""
-    } [[${orgName}]]/[[${repo.name}]] ${
-      item.title
-    } [[@${formattedUserLogin}]] [${item.number}](${item.html_url})`,
+    } [[${item.repository.name}]] ${item.title} [[@${formattedUserLogin}]] [${
+      item.number
+    }](${item.url})`,
     { isPageBlock: true }
   );
 
@@ -86,24 +95,28 @@ async function insertIssue(item, repo, page) {
 
   await logseq.Editor.insertBlock(
     block1.uuid,
-    `assignee: ${item.assignee ? `[[@${item.assignee.login}]]` : "-"}`
-  );
-
-  await logseq.Editor.insertBlock(
-    block1.uuid,
-    `created: ${formatDate(item.created_at)}`
-  );
-
-  await logseq.Editor.insertBlock(
-    block1.uuid,
-    `updated: ${formatDate(item.updated_at)}`
-  );
-
-  await logseq.Editor.insertBlock(
-    block1.uuid,
-    `labels: ${
-      item.labels.map((label) => `[[${label.name}]]`).join(", ") || "-"
+    `assignees: ${
+      item.assignees.nodes
+        .map((assignee) => `[[@${assignee.login}]]`)
+        .join(", ") || "-"
     }`
+  );
+
+  await logseq.Editor.insertBlock(
+    block1.uuid,
+    `created: ${formatDate(item.createdAt)}`
+  );
+
+  await logseq.Editor.insertBlock(
+    block1.uuid,
+    `updated: ${formatDate(item.updatedAt)}`
+  );
+
+  await logseq.Editor.insertBlock(
+    block1.uuid,
+    `labels: ${item.labels.nodes
+      .map((label) => `[[${label.name}]]`)
+      .join(", ")}`
   );
 
   await logseq.Editor.insertBlock(
@@ -111,12 +124,14 @@ async function insertIssue(item, repo, page) {
     `milestones: ${item.milestone ? `[[${item.milestone.title}]]` : "-"}`
   );
 
-  //   await logseq.Editor.insertBlock(
-  //     block1.uuid,
-  //     `
-  // projects: TODO
-  //     `,
-  //   );
+  await logseq.Editor.insertBlock(
+    block1.uuid,
+    `projects: ${
+      item.projectItems.nodes
+        .map((project) => `[[${project?.project?.title}]]`)
+        .join(", ") || "-"
+    }`
+  );
 }
 
 const main = async () => {
@@ -126,11 +141,10 @@ const main = async () => {
   logseq.Editor.registerSlashCommand("GithubPlugin: init", async () => {
     await logseq.Editor.deletePage(logseq.settings["TargetPage"]);
 
-    const octokit = new Octokit({
-      auth: logseq.settings["API Key"],
-    });
+    const apiKey = logseq.settings["API Key"];
+    initApi(apiKey);
 
-    await init(octokit);
+    await init();
   });
 
   // if (logseq.settings.blockTracker == undefined) {

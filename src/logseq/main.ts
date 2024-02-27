@@ -2,7 +2,7 @@ import "@logseq/libs";
 
 import "./settings";
 import { initApi, search } from "../api";
-import { Issue } from "@octokit/graphql-schema";
+import { Issue, PullRequest } from "@octokit/graphql-schema";
 
 // var blockArray;
 
@@ -24,25 +24,34 @@ async function init() {
     return;
   }
 
-  const data = await search(searchQuery);
-
   const page = await logseq.Editor.createPage(
     settings["TargetPage"],
     {},
     { redirect: true }
   );
 
-  data.forEach((item) => {
-    console.log(item);
+  const queries = searchQuery.split(",");
 
-    insertIssue(item, page);
+  const mainBlock = await logseq.Editor.insertBlock(page.name, `Queries:`, {
+    isPageBlock: true,
   });
 
-  // const mainBlock = await logseq.Editor.insertBlock(
-  //   page.name,
-  //   `### ${repos.length} repositories`,
-  //   { isPageBlock: true }
-  // );
+  console.log("queries: ", queries);
+
+  for (const query of queries) {
+    const data = await search(query);
+
+    await logseq.Editor.insertBlock(
+      mainBlock.uuid,
+      `Results for: ${query} - ${data.length} issues`
+    );
+
+    for (const item of data) {
+      console.log(item.title);
+
+      await insertIssue(item, page);
+    }
+  }
 
   // await logseq.Editor.insertBlock(page.name, `---`, { isPageBlock: true });
 
@@ -63,7 +72,7 @@ async function init() {
   await logseq.Editor.insertBlock(page.name, "", { isPageBlock: true });
 }
 
-async function insertIssue(item: Issue, page) {
+async function insertIssue(item: Issue | PullRequest, page) {
   const formattedUserLogin = item.author.login
     .replace("[", "(")
     .replace("]", ")");
@@ -80,8 +89,8 @@ async function insertIssue(item: Issue, page) {
 
   const block1 = await logseq.Editor.insertBlock(
     page.name,
-    `${item.state === "CLOSED" ? "DONE" : "TODO"} ${
-      item.pull_request ? "[[pull]]" : ""
+    `${["CLOSED", "MERGED"].includes(item.state) ? "DONE" : "TODO"} ${
+      item.__typename === "PullRequest" ? "[[pull]]" : ""
     } [[${item.repository.name}]] ${item.title} [[@${formattedUserLogin}]] [${
       item.number
     }](${item.url})`,

@@ -1,29 +1,35 @@
 {
   "name": "logseq-github-plugin",
-  "version": "1.0.6",
+  "version": "0.4.0",
   "description": "Github Plugin",
-  "main": "dist/index.html",
+  "main": "index.html",
   "targets": {
     "main": false
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel build --no-source-maps index.html --public-url ./"
+    "build": "parcel build --no-source-maps index.html --public-url ./",
+    "postbuild": "./scripts/postbuild.sh",
+    "watch": "parcel watch index.html --public-url ./",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "Aryan Sawhney",
+  "author": "",
   "license": "MIT",
+  "logseq": {
+    "id": "logseq-github-plugin-2",
+    "title": "logseq-github-plugin-2",
+    "icon": "./icon.png"
+  },
   "dependencies": {
     "@logseq/libs": "0.0.1-alpha.35",
+    "@octokit/graphql": "^7.0.2",
+    "@octokit/graphql-schema": "^14.56.0",
+    "@octokit/plugin-paginate-graphql": "^4.0.0",
+    "@octokit/types": "^12.5.0",
     "octokit": "^1.7.1"
-  },
-  "logseq": {
-    "id": "logseq-github-plugin",
-    "title": "logseq-github-plugin",
-    "icon": "./icon.png"
   },
   "devDependencies": {
     "buffer": "^6.0.3",
-    "parcel": "^2.0.0"
+    "parcel": "^2.11.0"
   }
 }

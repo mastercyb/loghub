@@ -17,6 +17,9 @@
 
 ## [roadmap](https://github.com/users/mastercyb/projects/5)
 
+issues with 🟢 have bounties in BOOT
+`40🟢🟢🟢` means `40 000 000 000 BOOT` or `40 GBOOT`
+
 ## credits
 - @sawhney17: initial implementation
 - @happylolonly: implementation of simple fetch

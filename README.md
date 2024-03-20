@@ -15,6 +15,8 @@
 
 - TODO publish to logseq appstore
 
+## [roadmap](https://github.com/users/mastercyb/projects/5)
+
 ## credits
 - @sawhney17: initial implementation
-- @happylolonly: implementation of current version
+- @happylolonly: implementation of simple fetch

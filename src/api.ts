@@ -4,12 +4,22 @@ import { Issue, PullRequest } from "@octokit/graphql-schema";
 
 const MyOctokit = Octokit.plugin(paginateGraphql);
 
-let octokit;
+let octokit: Octokit;
 
 export function initApi(apiKey: string) {
   octokit = new MyOctokit({
     auth: apiKey,
   });
+}
+
+export async function getUser(username: string) {
+  const response = await octokit.rest.users.getByUsername({
+    username,
+  });
+
+  console.log(response.data.type, response.data.name);
+
+  return response.data;
 }
 
 export async function search(q: string) {

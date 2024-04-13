@@ -1,7 +1,7 @@
 import "@logseq/libs";
 
 import "./settings";
-import { initApi, search } from "../api";
+import { getUser, initApi, search } from "../api";
 import { Issue, PullRequest } from "@octokit/graphql-schema";
 
 // var blockArray;
@@ -30,7 +30,7 @@ async function init() {
     { redirect: true }
   );
 
-  const queries = searchQuery.split(",");
+  const queries = searchQuery.split(",").map((q) => q.trim());
 
   const mainBlock = await logseq.Editor.insertBlock(page.name, `Queries:`, {
     isPageBlock: true,
@@ -39,7 +39,17 @@ async function init() {
   console.log("queries: ", queries);
 
   for (const query of queries) {
-    const data = await search(query);
+    const user = await getUser(query);
+
+    console.log(user);
+
+    const isOrg = user.type === "Organization";
+
+    const fQuery = `${isOrg ? "org" : "owner"}:${query} is:issue`;
+
+    console.log("query", fQuery);
+
+    const data = await search(fQuery);
 
     await logseq.Editor.insertBlock(
       mainBlock.uuid,

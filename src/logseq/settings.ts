@@ -22,7 +22,7 @@ const settings: SettingSchemaDesc[] = [
     title: "Enter target page",
     description:
       "Enter your desired page, to where the blocks will be inserted",
-    default: "Github Issues",
+    default: "loghub",
   },
   {
     key: "SearchQuery",

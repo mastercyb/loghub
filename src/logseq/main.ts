@@ -36,20 +36,18 @@ async function init() {
     isPageBlock: true,
   });
 
-  console.log("queries: ", queries);
+  console.debug("search: ", queries);
 
   for (const query of queries) {
     const user = await getUser(query);
-
-    console.log(user);
+    console.debug(user);
 
     const isOrg = user.type === "Organization";
 
-    const fQuery = `${isOrg ? "org" : "owner"}:${query} is:issue`;
+    const formattedQuery = `${isOrg ? "org" : "owner"}:${query} is:issue`;
+    console.debug("query", formattedQuery);
 
-    console.log("query", fQuery);
-
-    const data = await search(fQuery);
+    const data = await search(formattedQuery);
 
     await logseq.Editor.insertBlock(
       mainBlock.uuid,
